@@ -51,8 +51,8 @@
 - **[Weights & Biases](Experiment_Tracking.md)**: A platform for tracking experiments, visualizing metrics, and collaborating.
 
 ### 11. Deployment
-- **[Docker](deployment.md)**: For containerization of applications.
-- **[Flask/FastAPI](deployment.md)**: Lightweight web frameworks for deploying machine learning models.
+- **[Docker](Deployment.md)**: For containerization of applications.
+- **[Flask/FastAPI](Deployment.md)**: Lightweight web frameworks for deploying machine learning models.
 - **Kubernetes**: For managing containerized applications at scale.
 
 ### 12. Collaboration and Documentation
@@ -64,8 +64,8 @@
 - **[Fairlearn](Ethics_and_Fairness_Tools.md)**: A toolkit for assessing and mitigating fairness issues.
 
 ### 14. Extra Tools
-- **[Apache Kafka](extra.md)**: For handling real-time data streams.
-- **[Apache Spark](extra.md)**: For large-scale data processing.
+- **[Apache Kafka](Extra.md)**: For handling real-time data streams.
+- **[Apache Spark](Extra.md)**: For large-scale data processing.
 
 ## ⭐ Stay Connected!
 
