@@ -91,4 +91,3 @@ git merge <branch-name>
 
 ## Conclusion
 Understanding these core concepts and commands will give you a solid foundation in Git, enabling effective version control and collaboration in your projects.
-```
