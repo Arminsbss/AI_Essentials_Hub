@@ -9,8 +9,8 @@
 - **[R](R.md)**: Commonly used for statistical analysis and data visualization.
 
 ### 2. Machine Learning Frameworks
-- **[TensorFlow](deep_learning.md)**: A powerful open-source library for machine learning and deep learning.
-- **[PyTorch](deep_learning.md)**: Known for its flexibility and ease of use, especially in research.
+- **[TensorFlow](Deep_Learning.md)**: A powerful open-source library for machine learning and deep learning.
+- **[PyTorch](Deep_Learning.md)**: Known for its flexibility and ease of use, especially in research.
 - **Scikit-learn**: Great for traditional machine learning algorithms and data preprocessing.
 - **Keras**: A high-level neural networks API that runs on top of TensorFlow.
 
