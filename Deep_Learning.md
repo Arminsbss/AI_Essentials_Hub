@@ -1,5 +1,6 @@
 # Deep Learning Essentials
 
+
 ## What is Deep Learning?
 Deep Learning is a subset of machine learning that utilizes neural networks with many layers (deep networks) to model complex patterns in large datasets. It is particularly effective for tasks involving unstructured data such as images, audio, and text.
 
