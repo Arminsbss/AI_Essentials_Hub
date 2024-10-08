@@ -1,5 +1,6 @@
 # Data Preprocessing Essentials
 
+
 ## What is Data Preprocessing?
 Data Preprocessing is the technique of preparing raw data for analysis by transforming it into a clean and usable format. It is a critical step in the data science workflow that helps improve the accuracy and efficiency of machine learning models.
 
