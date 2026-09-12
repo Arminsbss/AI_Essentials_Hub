@@ -1,93 +1,57 @@
-# Git Essentials
+# Git Essentials for AI Projects
 
-## What is Git?
-Git is a distributed version control system that helps developers track changes in code and collaborate on projects. It allows multiple developers to work on the same project without interfering with each other.
+Git records changes to code and text so that a team can review, compare, and recover work. Model reproducibility also requires versioned data and environments; a code commit alone is not enough.
 
-## Key Concepts
+## Basic concepts
 
-### 1. Repository (Repo)
-- **Definition**: A repository is where your project files and their revision history are stored.
-- **Local vs Remote**: Local repositories are on your computer; remote repositories are hosted on platforms like GitHub.
+A repository contains history. A commit identifies a recorded change. A branch is a movable reference to a line of development. The working tree contains current files, while the staging area selects what will enter the next commit. A remote is a configured location for exchanging commits.
 
-### 2. Commits
-- **Definition**: A commit is a snapshot of your project at a specific point in time.
-- **Structure**: Each commit has a unique ID, author, date, and a message describing the changes.
+Use `git status` to understand your state before changing branches or staging files. Review differences before committing. Prefer focused changes that can be explained independently.
 
-### 3. Branching
-- **Definition**: Branches allow you to work on different features or fixes independently.
-- **Default Branch**: The main branch is often called `main` or `master`.
+## A simple editing workflow
 
-### 4. Merging
-- **Definition**: Merging combines changes from one branch into another.
-- **Fast-Forward Merge**: A simple case where the branch can be moved forward without any conflicts.
-- **Conflict Resolution**: Sometimes changes may conflict, requiring manual resolution.
+Run these commands from an existing local checkout. The branch name is an example.
 
-## Basic Commands
-
-### 1. Initialization
-```bash
-git init
-```
-- Initializes a new Git repository.
-
-### 2. Cloning
-```bash
-git clone <repository-url>
-```
-- Creates a copy of a remote repository locally.
-
-### 3. Checking Status
 ```bash
 git status
+git switch -c docs/refresh-ai-hub
+git diff
+git add README.md
+git diff --staged
+git commit -m "Refresh AI hub navigation"
 ```
-- Shows the state of the working directory and staged changes.
 
-### 4. Staging Changes
-```bash
-git add <file>
-```
-- Stages changes for the next commit.
+`git switch -c` creates and switches to a branch. The original `checkout` command is still valid; `switch` makes branch intent clearer.[^50] Stage the actual reviewed files. The example stages only README.md, so it will not accidentally include unrelated assets.
 
-### 5. Committing Changes
-```bash
-git commit -m "Commit message"
-```
-- Records staged changes in the repository with a message.
+To publish that branch to an already-configured remote, use `git push -u origin docs/refresh-ai-hub`, then open a pull request through your hosting service. Review the destination before pushing.
 
-### 6. Pushing Changes
-```bash
-git push origin <branch>
-```
-- Sends local commits to a remote repository.
+## What belongs in history
 
-### 7. Pulling Changes
-```bash
-git pull
-```
-- Fetches and integrates changes from a remote repository.
+| Store in Git | Store elsewhere, with a revision reference |
+|---|---|
+| Source code, prompts, configuration templates | Large datasets and model checkpoints |
+| Markdown guides and small evaluation fixtures | Private production samples |
+| Dependency lockfiles and environment notes | Secrets and access tokens |
+| Small manifests and experiment summaries | Large generated logs and transient caches |
 
-### 8. Creating a Branch
-```bash
-git branch <branch-name>
-```
-- Creates a new branch.
+For model and dataset artifacts, use a suitable artifact or data-versioning store and reference the immutable identifier. For notebooks, review output and remove sensitive content before committing.
 
-### 9. Switching Branches
-```bash
-git checkout <branch-name>
-```
-- Switches to a different branch.
+## Review practices
 
-### 10. Merging Branches
-```bash
-git merge <branch-name>
-```
-- Merges specified branch into the current branch.
+Explain the problem, the behavior after the change, how it was checked, and any limitation. For a model change, include evaluation comparisons and representative failures. For a documentation change, verify examples, links, and citations.
 
-## Best Practices
-- **Commit Often**: Smaller, frequent commits are easier to manage.
-- **Write Descriptive Commit Messages**: Clear messages help others understand changes.
-- **Use Branches for Features**: Keep the main branch stable by developing features in separate branches.
+Keep automated workflows narrowly permissioned. GitHub recommends pinning third-party actions to full commit SHAs for immutability. Never expose secrets to untrusted contribution code.[^51]
 
-## Conclusion
-Understanding these core concepts and commands will give you a solid foundation in Git, enabling effective version control and collaboration in your projects.
+## Recovery and collaboration
+
+Use a new corrective commit for shared-history mistakes when appropriate. Discuss history rewriting with collaborators before force-pushing. When resolving conflicts, understand the intended result rather than mechanically accepting one side.
+
+**Exercise:** Make a documentation branch, review the staged diff, and write a pull-request description with verification evidence. See the [update guide](UPDATE_GUIDE.md) for applying this edition.
+
+[Back to AI Essentials Hub](README.md)
+
+## Sources
+
+[^50]: Git project. [git-switch Documentation](https://git-scm.com/docs/git-switch). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
+
+[^51]: GitHub. [Secure use reference](https://docs.github.com/en/actions/reference/security/secure-use). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.

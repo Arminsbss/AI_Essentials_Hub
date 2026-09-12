@@ -1,99 +1,68 @@
-# R Language Essentials
+# R Essentials for AI and Statistical Learning
 
-## What is R?
-R is a programming language and environment primarily used for statistical computing and data analysis. It is widely used among statisticians and data miners for developing statistical software and data analysis.
+R is a strong choice for statistical analysis, experiments, visualization, and reproducible reporting. It remains useful in an AI curriculum alongside Python, particularly when the deliverable is an interpretable analysis rather than a model service.
 
-## Key Features of R
+## Learn the foundations
 
-### 1. Statistical Analysis
-- R provides a wide variety of statistical tests and models, including linear and nonlinear modeling, time-series analysis, and classification.
+Understand vectors, factors, lists, data frames, missing values, indexing, functions, and formulas. Learn the difference between an estimate, a prediction, a confidence interval, and a prediction interval. A predictive association does not by itself establish a causal effect.
 
-### 2. Data Visualization
-- R excels at creating a variety of data visualizations, from basic plots to complex interactive graphics.
+Use tidyverse tools for a consistent data-analysis workflow, or data.table when its approach fits the project. Choose one style initially. Existing caret projects can remain useful; this guide uses tidymodels for new learning because its recipes, workflows, and resampling components make the modeling process explicit. This is an editorial choice, not a claim that caret is unusable.[^46]
 
-### 3. Extensive Packages
-- R has a vast ecosystem of packages available through CRAN (Comprehensive R Archive Network) that extend its functionality for specific applications.
+## Reproducible projects
 
-### 4. Open Source
-- R is free to use, and its source code is available for modification and redistribution.
+Use a project directory and `renv` to record package versions. `renv::snapshot()` records the environment; `renv::restore()` recreates the recorded package library. System dependencies and the R interpreter still need separate documentation.[^47]
 
-## Key Concepts
+```r
+install.packages("renv")
+renv::init()
+install.packages(c("tidymodels", "ggplot2"))
+renv::snapshot()
+```
 
-### 1. Data Types
-- **Vectors**: The basic data structure in R, representing a sequence of elements of the same type.
-- **Matrices**: Two-dimensional arrays that can hold data of a single type.
-- **Data Frames**: Tables where each column can contain different types of data, similar to Excel spreadsheets.
-- **Lists**: A collection of elements that can contain different types of data.
+Commit `renv.lock` and renv's project bootstrap files. Do not commit the whole package library or authentication files.
 
-### 2. Control Structures
-- **Conditional Statements**: `if`, `else`, `switch` for controlling the flow of execution based on conditions.
-- **Loops**: `for`, `while`, and `repeat` for iterative operations.
+## A complete small modeling example
 
-### 3. Functions
-- R allows users to create reusable code blocks through user-defined functions, enhancing modularity and readability.
+Requires tidymodels. The built-in iris dataset avoids network downloads. This is a teaching example, not evidence of production performance.
 
-## Key Libraries for Data Analysis in R
+```r
+library(tidymodels)
+set.seed(42)
 
-### 1. Tidyverse
-- **Purpose**: A collection of R packages designed for data science, emphasizing data manipulation and visualization.
-- **Key Packages**:
-  - **dplyr**: For data manipulation (filtering, grouping, summarizing).
-  - **ggplot2**: For data visualization, based on the Grammar of Graphics.
-  - **tidyr**: For tidying data (reshaping and organizing).
-- **Installation**:
-  ```R
-  install.packages("tidyverse")
-  ```
+parts <- initial_split(iris, prop = 0.8, strata = Species)
+train <- training(parts)
+test <- testing(parts)
 
-### 2. caret
-- **Purpose**: A comprehensive package for building predictive models, providing tools for data splitting, pre-processing, feature selection, and model tuning.
-- **Installation**:
-  ```R
-  install.packages("caret")
-  ```
+spec <- decision_tree(tree_depth = 3) |>
+  set_engine("rpart") |>
+  set_mode("classification")
 
-### 3. randomForest
-- **Purpose**: An implementation of the random forest algorithm for classification and regression.
-- **Installation**:
-  ```R
-  install.packages("randomForest")
-  ```
+flow <- workflow() |>
+  add_formula(Species ~ .) |>
+  add_model(spec)
 
-### 4. shiny
-- **Purpose**: A package for building interactive web applications directly from R.
-- **Installation**:
-  ```R
-  install.packages("shiny")
-  ```
+fit_result <- fit(flow, data = train)
+predictions <- predict(fit_result, test) |>
+  bind_cols(test |> select(Species))
+accuracy(predictions, truth = Species, estimate = .pred_class)
+```
 
-### 5. RMarkdown
-- **Purpose**: A framework for creating dynamic documents and reports that integrate R code with narrative text.
-- **Installation**:
-  ```R
-  install.packages("rmarkdown")
-  ```
+For model selection, make resampling folds from the training partition, fit preprocessing inside each fold, and reserve the test set for the final comparison. For repeated measurements, group by subject; for forecasting, respect time order.[^46]
 
-## Applications of R
+## Reports and applications
 
-### 1. Data Analysis
-- R is widely used in data analysis for tasks like exploratory data analysis (EDA), statistical modeling, and hypothesis testing.
+Quarto supports computational documents and has getting-started paths for RStudio, Jupyter, VS Code, and other editors. Use a report to connect data, methods, findings, uncertainty, and limitations. R Markdown remains appropriate for existing projects; migration is optional.[^48]
 
-### 2. Data Visualization
-- Creating complex and informative visualizations to communicate data insights effectively.
+Shiny is an option when readers need to change inputs interactively. Before connecting an app to a model, specify the permitted input range and explain what the result means. Avoid exposing a notebook or development session as a public service.
 
-### 3. Machine Learning
-- R is used for building machine learning models and algorithms, with libraries for classification, regression, clustering, and more.
+**Exercise:** Compare a shallow and a deeper tree using training-set resampling. Report the selected model's test score once, including the number of test rows. Save the environment record and explain the limits of such a small dataset.
 
-### 4. Bioinformatics
-- Analyzing biological data, including genomics and proteomics, leveraging R’s statistical capabilities.
+[Back to AI Essentials Hub](README.md)
 
-### 5. Finance
-- Quantitative analysis and modeling in finance, risk assessment, and portfolio management.
+## Sources
 
-## Best Practices
-- **Document Your Work**: Use RMarkdown for creating reports that include both code and explanations.
-- **Use Version Control**: Incorporate version control systems like Git for collaborative projects and tracking changes.
-- **Follow Coding Standards**: Maintain readability and consistency in your code through naming conventions and structuring.
+[^46]: tidymodels team. [Evaluate your model with resampling](https://www.tidymodels.org/start/resampling/). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
 
-## Conclusion
-R is a powerful tool for data analysis and statistical computing, offering a wide range of functionalities and packages. Mastering R will enable you to perform complex data analyses and create insightful visualizations effectively.
+[^47]: Posit / renv authors. [Introduction to renv](https://rstudio.github.io/renv/articles/renv.html). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
+
+[^48]: Posit / Quarto contributors. [Get Started](https://quarto.org/docs/get-started/). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.

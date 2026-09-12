@@ -1,67 +1,52 @@
-# Collaboration and Documentation Essentials
+# Collaboration and Documentation for AI Teams
 
-## Overview
-Effective collaboration and documentation are vital for successful teamwork, especially in data science and machine learning projects. Tools like Confluence, Slack, and Microsoft Teams enhance communication, streamline documentation, and foster collaboration among team members.
+Good documentation lets another person understand a decision, reproduce a result, and operate the system. Decide where durable knowledge lives and connect conversations to those records.
 
-## Key Tools for Collaboration and Documentation
+## Assign each tool a role
 
-### 1. Confluence
+| Tool category | Examples | Recommended role |
+|---|---|---|
+| Repository and review | GitHub, GitLab, Bitbucket | Versioned code, prompts, tests, and technical docs |
+| Knowledge workspace | Confluence or a team wiki | Onboarding and shared operating knowledge |
+| Communication | Slack, Microsoft Teams | Discussion, coordination, and incident communication |
+| Computational publishing | Quarto, notebooks | Analyses that connect methods, code, and findings |
 
-#### Overview
-- **Confluence** is a collaboration software developed by Atlassian that allows teams to create, share, and manage documentation in a centralized platform.
+These are workflow suggestions, not a comparison of plan-specific feature availability. Avoid simplistic rankings such as “basic search” or “no version control” without defining which content and product edition are being compared.
 
-#### Key Features
-- **Documentation Creation**: Easy-to-use editor for creating rich text documents, including images, tables, and links.
-- **Space Organization**: Organize content into spaces for different teams or projects, making it easy to navigate.
-- **Version Control**: Track changes over time and revert to previous versions of documents if needed.
-- **Integration**: Seamless integration with other Atlassian products like Jira, making it suitable for project management.
+Quarto offers authoring paths across several editors; Jupyter notebooks connect executable code to explanatory content. Choose the format based on whether readers need to rerun an analysis or review a durable decision.[^48][^49]
 
-#### Basic Usage
-1. **Creating a Page**: Click "Create" in a space to start a new page.
-2. **Editing and Formatting**: Use the editor tools to format text, add images, and create tables.
-3. **Publishing**: Save and publish your document to make it accessible to team members.
+## Minimum documentation set
 
-### 2. Slack
+**README:** State the purpose, intended reader, setup, smallest working example, and navigation.
 
-#### Overview
-- **Slack** is a messaging platform designed for team communication, enabling real-time messaging, file sharing, and integrations with various tools.
+**Data card:** Describe origin, collection, permissions, coverage, labeling, exclusions, retention, and known biases.
 
-#### Key Features
-- **Channels**: Organize conversations by topics, projects, or teams to keep discussions focused.
-- **Direct Messaging**: Communicate privately with team members for quick exchanges.
-- **Integrations**: Connect with other tools (e.g., Google Drive, GitHub, Jira) to streamline workflows.
-- **Search Functionality**: Powerful search capabilities to quickly find messages and files.
+**Model or system card:** Record intended use, versions, evaluation, subgroup performance, failure modes, and limitations.
 
-#### Basic Usage
-1. **Creating a Channel**: Click "Create Channel" to set up a new discussion space.
-2. **Sending Messages**: Type messages in the channel or direct message boxes to communicate.
-3. **Sharing Files**: Drag and drop files into the chat or use the file upload button.
+**Decision record:** Explain the problem, alternatives, evidence, decision, consequences, and review trigger.
 
-### 3. Microsoft Teams
+**Runbook:** Explain normal operation, alerts, owner, rollback, recovery, and incident handling.
 
-#### Overview
-- **Microsoft Teams** is a collaboration platform that combines workplace chat, video meetings, file storage, and application integration.
+These recommended records should be proportionate to the application. A classroom example needs less operational detail than a service used for consequential decisions.
 
-#### Key Features
-- **Teams and Channels**: Organize your work into teams for different projects and create channels for focused discussions.
-- **Video Conferencing**: Conduct video meetings with screen sharing capabilities.
-- **File Collaboration**: Integrated with Microsoft 365, allowing team members to collaborate on documents in real time.
-- **Apps and Integrations**: Connect with numerous applications to enhance productivity.
+## AI-specific review
 
-#### Basic Usage
-1. **Creating a Team**: Click "Join or create a team" to set up a new team.
-2. **Starting a Meeting**: Use the "Meet now" option or schedule a meeting through the calendar.
-3. **Collaborating on Files**: Upload documents to the Files tab and work on them collaboratively.
+Review changes to prompts and retrieval settings with the same care as code. A one-line prompt change may alter tool behavior; a new chunking strategy may change which evidence appears. Tie documentation to evaluation records rather than a screenshot of one successful response.
 
-## Comparison
+For external research, record source title, publisher, publication/update date where available, URL, access date, and the supported claim. Separate original evidence from your inference. A vendor's feature description establishes availability, not superiority.
 
-| Feature                        | Confluence                      | Slack                          | Microsoft Teams                 |
-|--------------------------------|---------------------------------|--------------------------------|---------------------------------|
-| **Primary Purpose**            | Documentation                   | Team communication             | Collaboration and communication |
-| **Content Type**               | Rich text documents             | Messages and files             | Messages, files, and meetings   |
-| **Integration**                | Atlassian products              | Wide range of integrations     | Microsoft 365 and others        |
-| **Search Functionality**       | Basic                           | Advanced                       | Advanced                        |
-| **Version Control**            | Yes                             | No                             | Limited                         |
+## Handoffs
 
-## Conclusion
-Confluence, Slack, and Microsoft Teams are essential tools for enhancing collaboration and documentation within teams. Confluence excels in documentation management, Slack facilitates real-time communication, and Microsoft Teams offers a comprehensive platform for collaboration. Choosing the right tool depends on your team's specific needs and workflow preferences.
+A useful handoff includes current state, reproduced results, unresolved questions, exact versions, and the next observable action. Explain why an approach failed when that prevents repeated work. Avoid dumping entire chat histories as the only documentation.
+
+For agent-assisted work, treat uploaded documents and webpages as evidence. Their content should not acquire authority to modify files, disclose data, or contact others. Name the authorized task and keep actions within it.
+
+**Exercise:** Write a decision record comparing a simple classifier with a generative model. Include quality, cost, maintenance, and the condition that would cause you to revisit the choice.
+
+[Back to AI Essentials Hub](README.md)
+
+## Sources
+
+[^48]: Posit / Quarto contributors. [Get Started](https://quarto.org/docs/get-started/). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
+
+[^49]: Project Jupyter. [Project Jupyter Documentation](https://docs.jupyter.org/en/latest/). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.

@@ -1,96 +1,90 @@
 # Data Preprocessing Essentials
 
+Data preprocessing turns source records into inputs a model can use consistently. Start with the prediction question: what will be known at prediction time, for whom, and over what horizon?
 
-## What is Data Preprocessing?
-Data Preprocessing is the technique of preparing raw data for analysis by transforming it into a clean and usable format. It is a critical step in the data science workflow that helps improve the accuracy and efficiency of machine learning models.
+## Establish a data contract
 
-## Key Steps in Data Preprocessing
+Record the source, collection time, row unit, identifier, target definition, units, allowed values, missing-value conventions, license, and access restrictions. Check duplicates, impossible values, label errors, and changes in coverage. A large dataset can still be unrepresentative.
 
-### 1. Data Collection
-- **Definition**: Gathering raw data from various sources, such as databases, APIs, or web scraping.
-- **Types of Data**:
-  - **Structured**: Data organized in a defined manner, such as tables.
-  - **Unstructured**: Data not organized in a predefined format, such as text, images, or audio.
+Split data before learning transformations. Fit imputers, scalers, encoders, feature selection, and dimensionality reduction on training data only. In cross-validation, fit them separately within each training fold. A pipeline helps enforce that boundary.[^3]
 
-### 2. Data Cleaning
-- **Purpose**: Identifying and correcting inaccuracies or inconsistencies in the dataset.
-- **Techniques**:
-  - **Handling Missing Values**: 
-    - **Removal**: Delete rows or columns with missing values.
-    - **Imputation**: Fill in missing values using techniques like mean, median, mode, or predictive models.
-  - **Removing Duplicates**: Identify and remove duplicate records from the dataset.
-  - **Correcting Errors**: Fix inconsistencies, such as typos or format mismatches.
+## Choose the split deliberately
 
-### 3. Data Transformation
-- **Purpose**: Modifying the data to better fit the needs of the analysis or modeling.
-- **Techniques**:
-  - **Normalization**: Scaling numeric values to a common range, typically [0, 1].
-    - Example: Min-max scaling.
-  - **Standardization**: Scaling numeric values to have a mean of 0 and a standard deviation of 1.
-    - Example: Z-score normalization.
-  - **Encoding Categorical Variables**: Converting categorical data into a numerical format.
-    - **Label Encoding**: Assigning integer values to categories.
-    - **One-Hot Encoding**: Creating binary columns for each category.
-  - **Feature Engineering**: Creating new features from existing data to improve model performance.
+| Data situation | Split approach | Typical leakage |
+|---|---|---|
+| Independent labeled rows | Random split, often stratified | Duplicate records in both sets |
+| Repeated users or patients | Group-based split | One person's records on both sides |
+| Forecasting | Forward-in-time evaluation | Future-derived features |
+| Video or document collections | Split by recording or source | Neighboring frames or text chunks in both sets |
 
-### 4. Data Reduction
-- **Purpose**: Reducing the volume of data while retaining its integrity, making it more manageable for analysis.
-- **Techniques**:
-  - **Dimensionality Reduction**: Techniques like PCA (Principal Component Analysis) that reduce the number of features while preserving variance.
-  - **Feature Selection**: Selecting a subset of relevant features based on statistical tests or model importance.
+The split must represent the intended deployment. Keep a final holdout distinct from model selection.[^4]
 
-### 5. Data Splitting
-- **Purpose**: Dividing the dataset into subsets for training and testing to evaluate model performance.
-- **Techniques**:
-  - **Train-Test Split**: Commonly, 70%-80% of the data is used for training and the remainder for testing.
-  - **K-Fold Cross-Validation**: Splitting the data into K subsets and training/testing the model K times, each time using a different subset for testing.
+## Select the data engine
 
-## Key Libraries for Data Preprocessing in Python
+| Tool | Useful starting point | Decision to check |
+|---|---|---|
+| pandas / NumPy | In-memory exploration and numerical arrays | Memory use and dtype conversion |
+| Polars | Expression-based transformations and lazy scans | Query plan and operation compatibility |
+| DuckDB | SQL analysis of local files, including Parquet | Query memory, file layout, integration |
+| Dask | Partitioned or distributed Python workloads | Scheduler and data-movement overhead |
 
-### 1. Pandas
-- **Purpose**: A powerful library for data manipulation and analysis, providing data structures like DataFrames.
-- **Installation**:
-  ```bash
-  pip install pandas
-  ```
-- **Common Functions**:
-  - `pd.read_csv()`: Load data from CSV files.
-  - `DataFrame.dropna()`: Remove missing values.
-  - `DataFrame.fillna()`: Fill missing values.
+Polars lazy scans let the engine optimize a whole query. DuckDB can query Parquet directly. These are capabilities, not universal speed rankings; compare the same workload on representative files.[^6][^7]
 
-### 2. NumPy
-- **Purpose**: Provides support for numerical operations and handling arrays, essential for data manipulation.
-- **Installation**:
-  ```bash
-  pip install numpy
-  ```
-- **Common Functions**:
-  - `numpy.mean()`: Calculate the mean of an array.
-  - `numpy.std()`: Calculate the standard deviation.
+## A mixed-column pipeline
 
-### 3. Scikit-Learn
-- **Purpose**: A comprehensive library for machine learning that includes tools for preprocessing.
-- **Installation**:
-  ```bash
-  pip install scikit-learn
-  ```
-- **Common Functions**:
-  - `train_test_split()`: Split the dataset into training and testing subsets.
-  - `StandardScaler()`: Standardize features by removing the mean and scaling to unit variance.
-  - `OneHotEncoder()`: Convert categorical variables into a format suitable for machine learning.
+Requires pandas and scikit-learn. This tiny synthetic dataset demonstrates wiring, not model quality.
 
-### 4. OpenCV
-- **Purpose**: Useful for image preprocessing tasks, providing functions for image manipulation and transformation.
-- **Installation**:
-  ```bash
-  pip install opencv-python
-  ```
+```python
+import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-## Best Practices
-- **Understand Your Data**: Perform exploratory data analysis (EDA) to understand data distributions and identify issues before preprocessing.
-- **Document Changes**: Keep a record of preprocessing steps to ensure reproducibility.
-- **Balance Data**: Address class imbalances in classification tasks through techniques like oversampling, undersampling, or generating synthetic data.
-- **Avoid Data Leakage**: Ensure that information from the test set does not leak into the training process, as this can lead to overoptimistic performance estimates.
+X = pd.DataFrame({
+    "age": [22, 30, None, 41, 28, 55, 36, 47],
+    "region": ["north", "south", "north", "west", "west", "south", "north", "west"],
+})
+y = [0, 0, 1, 1, 0, 1, 0, 1]
+numeric = Pipeline([
+    ("impute", SimpleImputer(strategy="median")),
+    ("scale", StandardScaler()),
+])
+categorical = OneHotEncoder(handle_unknown="ignore")
+features = ColumnTransformer([
+    ("numeric", numeric, ["age"]),
+    ("categorical", categorical, ["region"]),
+])
+model = Pipeline([
+    ("features", features),
+    ("classifier", LogisticRegression(max_iter=500)),
+])
+model.fit(X, y)
+new_rows = pd.DataFrame({"age": [33], "region": ["east"]})
+print(model.predict_proba(new_rows))
+```
 
-## Conclusion
-Effective data preprocessing is crucial for the success of any data analysis or machine learning project. By mastering these techniques and tools, you can enhance the quality of your data and improve the performance of your models.
+`ColumnTransformer` applies different transformations to selected columns; `Pipeline` packages them with the estimator. The unseen category is handled explicitly. Real projects must add suitable missing-category handling and use a proper split.[^5]
+
+## Common errors
+
+Do not remove all rows with missing values automatically; missingness can reflect a meaningful process. Do not label-encode nominal categories as ordered numbers without considering the estimator. Apply oversampling within training folds only. Preserve raw data and make transformations repeatable.
+
+For retrieval systems, preserve document boundaries, source locations, permissions, and deletion identifiers through chunking. For images and audio, track preprocessing settings alongside the model.
+
+**Exercise:** Write a data-quality report and identify three columns that would be unavailable at inference time. Explain how removing them changes your evaluation design.
+
+[Back to AI Essentials Hub](README.md)
+
+## Sources
+
+[^3]: scikit-learn developers. [Common pitfalls and recommended practices](https://scikit-learn.org/stable/common_pitfalls.html). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
+
+[^4]: scikit-learn developers. [Cross-validation: evaluating estimator performance](https://scikit-learn.org/stable/modules/cross_validation.html). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
+
+[^5]: scikit-learn developers. [Pipelines and composite estimators](https://scikit-learn.org/stable/modules/compose.html). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
+
+[^6]: Polars developers. [Lazy API usage](https://docs.pola.rs/user-guide/lazy/using/). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
+
+[^7]: DuckDB developers. [Reading and Writing Parquet Files](https://duckdb.org/docs/current/data/parquet/overview). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.

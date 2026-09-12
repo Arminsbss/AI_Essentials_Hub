@@ -1,94 +1,69 @@
 # Machine Learning Essentials
 
-## What is Machine Learning?
-Machine Learning (ML) is a subset of artificial intelligence that enables systems to learn from data, identify patterns, and make decisions with minimal human intervention. It focuses on building algorithms that can process and analyze data to improve performance over time.
+Machine learning estimates patterns from data to make predictions or support decisions. Begin with a measurable problem and a simple baseline. Many tabular tasks deserve a classical model before a large generative model.
 
-## Key Concepts
+## Concepts to understand
 
-### 1. Supervised Learning
-- **Definition**: A type of ML where the model is trained on labeled data. The algorithm learns to map inputs to outputs based on example input-output pairs.
-- **Examples**: Classification and regression tasks.
+Supervised learning uses labeled examples for classification or regression. Unsupervised learning explores structure without the same target labels. Self-supervised learning creates training signals from the data itself. Reinforcement learning optimizes actions against rewards through interaction or related training setups.
 
-### 2. Unsupervised Learning
-- **Definition**: A type of ML where the model is trained on unlabeled data. The algorithm tries to find hidden patterns or intrinsic structures in the input data.
-- **Examples**: Clustering and association tasks.
+An LLM application that calls tools is not necessarily trained using reinforcement learning. Likewise, a neural network is a mathematical model, not a literal model of human understanding.
 
-### 3. Reinforcement Learning
-- **Definition**: A type of ML where an agent learns to make decisions by taking actions in an environment to maximize cumulative reward.
-- **Examples**: Game playing (e.g., AlphaGo), robotics.
+## Algorithm choices
 
-### 4. Overfitting vs. Underfitting
-- **Overfitting**: The model learns the training data too well, capturing noise instead of the underlying pattern, resulting in poor generalization to new data.
-- **Underfitting**: The model is too simple to capture the underlying pattern in the data, leading to poor performance on both training and test sets.
+| Task | Useful baseline | Next comparison |
+|---|---|---|
+| Binary or multiclass prediction | Dummy classifier, logistic regression | Trees, random forests, gradient boosting |
+| Numeric prediction | Mean/median predictor, linear regression | Regularized regression, boosting |
+| Text classification | TF-IDF plus a linear classifier | Encoder model or prompted LLM |
+| Clustering | Domain rules, k-means when assumptions fit | Density-based or hierarchical methods |
+| Forecasting | Last value and seasonal naive forecasts | Statistical or learned time-series models |
 
-## Common Algorithms
+Scikit-learn provides estimators, preprocessing, pipelines, and evaluation tools. XGBoost is a useful additional boosting library when its implementation fits the task; verify its own installation and model settings before use. Deep learning belongs in [Deep_Learning.md](Deep_Learning.md).
 
-### 1. Linear Regression
-- **Purpose**: Predict a continuous outcome variable based on one or more predictor variables.
-  
-### 2. Logistic Regression
-- **Purpose**: Used for binary classification tasks, predicting probabilities of categorical outcomes.
+## A reproducible baseline experiment
 
-### 3. Decision Trees
-- **Purpose**: A model that splits data into branches to make predictions based on feature values.
+Requires NumPy and scikit-learn. The iris dataset ships with scikit-learn. This evaluates a fixed pipeline; it does not perform hyperparameter tuning.
 
-### 4. Random Forest
-- **Purpose**: An ensemble method that combines multiple decision trees to improve accuracy and reduce overfitting.
+```python
+import numpy as np
+from sklearn.datasets import load_iris
+from sklearn.dummy import DummyClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
-### 5. Support Vector Machines (SVM)
-- **Purpose**: A classification algorithm that finds the hyperplane that best separates classes in the feature space.
+X, y = load_iris(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, stratify=y, random_state=42
+)
+model = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000))
+folds = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+scores = cross_val_score(model, X_train, y_train, cv=folds, scoring="accuracy")
+print("CV mean:", round(float(np.mean(scores)), 3))
+model.fit(X_train, y_train)
+dummy = DummyClassifier(strategy="most_frequent").fit(X_train, y_train)
+print("Test:", accuracy_score(y_test, model.predict(X_test)))
+print("Baseline:", accuracy_score(y_test, dummy.predict(X_test)))
+```
 
-### 6. K-Nearest Neighbors (KNN)
-- **Purpose**: A simple classification algorithm that assigns a class based on the majority class of its nearest neighbors.
+Cross-validation estimates performance across training partitions. The final test set remains outside model selection. Grouped or time-dependent data needs a different splitting strategy.[^4]
 
-### 7. Neural Networks
-- **Purpose**: Models inspired by the human brain, capable of capturing complex patterns in data, especially in deep learning.
+## Match metrics to the decision
 
-### 8. Clustering Algorithms
-- **Examples**: K-Means, Hierarchical Clustering, DBSCAN, used for grouping similar data points together.
+Accuracy can hide poor performance on rare classes. Report precision and recall when false alarms and missed cases have different costs. For regression, examine MAE or RMSE in the target's units. For probability-based decisions, inspect calibration as well as discrimination. Always record sample counts and examine failure cases.
 
-## Key Libraries for Machine Learning in Python
+Avoid selecting a threshold on the final test set. A model with a slightly higher average score may be worse at the operational threshold or for a critical subgroup. Uncertainty estimates should respect groups and time dependence.
 
-### 1. Scikit-Learn
-- **Purpose**: A comprehensive library for classical machine learning algorithms, providing tools for preprocessing, model training, and evaluation.
-- **Installation**:
-  ```bash
-  pip install scikit-learn
-  ```
+## Finish the experiment
 
-### 2. TensorFlow
-- **Purpose**: A powerful library for building and training deep learning models, developed by Google.
-- **Installation**:
-  ```bash
-  pip install tensorflow
-  ```
+Record the dataset revision, split, code version, environment, chosen metrics, baseline, and final model. Keep an error-analysis table with examples and likely causes. Compare complexity, training time, inference latency, and maintenance effort alongside predictive quality.
 
-### 3. Keras
-- **Purpose**: A high-level neural networks API that simplifies the creation and training of deep learning models, running on top of TensorFlow.
-- **Installation**:
-  ```bash
-  pip install keras
-  ```
+**Exercise:** Add a random forest to the comparison. Decide your selection rule before viewing the final holdout, then explain whether its extra complexity was worthwhile. See [experiment tracking](Experiment_Tracking.md).
 
-### 4. PyTorch
-- **Purpose**: An open-source deep learning framework that provides dynamic computation graphs and a flexible interface.
-- **Installation**:
-  ```bash
-  pip install torch torchvision
-  ```
+[Back to AI Essentials Hub](README.md)
 
-### 5. XGBoost
-- **Purpose**: An optimized gradient boosting library that is efficient and flexible, commonly used for structured data competitions.
-- **Installation**:
-  ```bash
-  pip install xgboost
-  ```
+## Sources
 
-## Best Practices
-- **Data Quality**: Ensure high-quality data for training. Clean, normalize, and preprocess your datasets.
-- **Feature Engineering**: Create informative features to improve model performance.
-- **Model Evaluation**: Use techniques like cross-validation, confusion matrices, and various metrics (e.g., accuracy, F1 score) for evaluation.
-- **Experimentation**: Continuously experiment with different algorithms and hyperparameters to find the best model for your data.
-
-## Conclusion
-Mastering these concepts, algorithms, and libraries will equip you to effectively tackle machine learning tasks, whether for academic research or practical applications in industry.
+[^4]: scikit-learn developers. [Cross-validation: evaluating estimator performance](https://scikit-learn.org/stable/modules/cross_validation.html). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.

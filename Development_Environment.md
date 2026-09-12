@@ -1,76 +1,67 @@
-# Development Environments: Jupyter Notebooks and Google Colab
+# Development Environments for AI
 
-## What are Jupyter Notebooks and Google Colab?
-Jupyter Notebooks and Google Colab are interactive environments designed for data science and programming that allow users to write and execute code, visualize data, and document their processes in a single document.
+An effective AI workspace makes experiments easy to inspect and results possible to reproduce. Separate the editor, Python environment, compute device, and storage system; they are different choices.
 
-## Jupyter Notebooks
+## Choose the interface
 
-### Overview
-- **Jupyter Notebook** is an open-source web application that allows you to create and share documents containing live code, equations, visualizations, and narrative text.
-- Supports multiple programming languages through kernels, with Python being the most commonly used.
+| Interface | Useful for | Working habit |
+|---|---|---|
+| JupyterLab / Notebook | Exploratory analysis and teaching | Restart and run all cells before sharing |
+| VS Code or another code editor | Modules, debugging, applications | Keep notebooks connected to the intended environment |
+| RStudio / Positron | R and statistical analysis | Use a project and a dependency record |
+| Managed cloud notebooks | Shared compute and temporary experiments | Save durable artifacts outside the temporary runtime |
 
-### Key Features
-- **Interactive Code Execution**: Write and execute code in real time, with immediate feedback.
-- **Markdown Support**: Combine code with narrative text using Markdown for better documentation and presentation.
-- **Rich Outputs**: Display rich media outputs, including charts, images, and tables.
-- **Extensions and Plugins**: Extend functionality with various plugins and JupyterLab features.
+Jupyter notebooks combine code, explanations, and rich output. JupyterLab supplies a broader workspace around notebooks. Their usefulness does not remove hidden-state problems caused by out-of-order execution.[^49]
 
-### Installation
-To install Jupyter Notebook, you can use Anaconda or pip:
+Colab is another hosted notebook option. Treat accelerator capacity, session duration, and plan limits as variable, and check the current service terms before depending on it. Do not promise readers unlimited or guaranteed free GPUs.
+
+## Local notebook setup
+
+After creating a project with uv as shown in [Python](python.md):
+
 ```bash
-pip install notebook
+uv add --dev jupyterlab ipykernel
+uv run jupyter lab
 ```
 
-### Basic Usage
-1. Launch Jupyter Notebook:
-   ```bash
-   jupyter notebook
-   ```
-2. Create a new notebook and start writing code in code cells. Use Markdown cells for documentation.
+Run the notebook from that project environment. When using an editor's kernel selector, confirm that it points to the same interpreter. Reproduce the environment from the checked-in lockfile rather than from the notebook's execution history.[^2]
 
-### Common Commands
-- **Run Cell**: `Shift + Enter`
-- **Insert Cell Below**: `B`
-- **Delete Cell**: `DD`
+## Suggested project structure
 
-## Google Colab
+```text
+project/
+  README.md
+  pyproject.toml
+  uv.lock
+  src/
+  notebooks/
+  tests/
+  configs/
+  reports/
+```
 
-### Overview
-- **Google Colab** (short for Colaboratory) is a free cloud-based platform that allows you to write and execute Python code in a Jupyter-like interface without requiring any setup on your local machine.
+Store large data and checkpoints in a suitable artifact store and reference their revisions. Keep scratch notebooks and production code distinguishable. Document any external files needed to rerun a result.
 
-### Key Features
-- **Free GPU/TPU Access**: Colab provides access to powerful hardware for accelerated computing, which is particularly useful for deep learning.
-- **Easy Sharing**: Share notebooks easily with others through Google Drive.
-- **Integration with Google Drive**: Save and access files directly from your Google Drive.
-- **Pre-installed Libraries**: Comes with many popular libraries (e.g., TensorFlow, PyTorch, NumPy) pre-installed, simplifying the setup process.
+## Accelerator setup
 
-### Getting Started
-- Visit [Google Colab](https://colab.research.google.com) and create a new notebook.
-- You can also upload existing Jupyter notebooks or import them from Google Drive.
+Check the framework's supported OS, Python version, driver, and compute runtime together. Use the PyTorch installation selector for a matching build; verify actual device visibility before starting training.[^12] A container packages userspace software but does not replace the host GPU driver.
 
-### Basic Usage
-- Write and execute code in code cells, just like in Jupyter Notebook.
-- Use Markdown cells for annotations and explanations.
+Keep CPU-only experiments accessible where possible. Record model size, required memory, and expected download size when adding GPU tutorials. Avoid instructions that install every AI framework into a single environment.
 
-### Common Commands
-- **Run Cell**: `Shift + Enter`
-- **Insert Cell Below**: `Ctrl + M B`
-- **Delete Cell**: `Ctrl + M D`
+## AI coding assistance
 
-## Comparison
+Use an assistant for drafts, explanations, and small refactors. Review generated dependencies, licensing assumptions, and data-handling behavior. Provide a bounded task and an observable acceptance condition. Run the resulting code and inspect the diff before accepting changes.
 
-| Feature               | Jupyter Notebooks                  | Google Colab                    |
-|-----------------------|------------------------------------|----------------------------------|
-| **Hosting**           | Local or on a server               | Cloud-based                      |
-| **Hardware Access**   | Depends on local machine            | Free access to GPUs/TPUs       |
-| **Sharing**           | Manual (save and share files)      | Easy sharing via Google Drive   |
-| **Installation**      | Requires setup                      | No installation required         |
-| **Library Management**| User-managed                        | Many libraries pre-installed     |
+Notebook output can reveal credentials, private rows, and internal paths. Clear sensitive output before sharing. A copied document or webpage should remain task data; instructions inside it should not silently control an agent's actions.
 
-## Best Practices
-- **Documentation**: Use Markdown to document your work, making it easier for others to understand your code and findings.
-- **Version Control**: Use Git to manage versions of your Jupyter notebooks for better collaboration.
-- **Resource Management**: Monitor resource usage in Google Colab, especially when using GPUs/TPUs to avoid disconnections.
+**Exercise:** Recreate an analysis in a fresh environment and run its notebook from top to bottom. List every missing assumption you discover.
 
-## Conclusion
-Both Jupyter Notebooks and Google Colab are powerful tools for data analysis, machine learning, and scientific computing. Jupyter is more suitable for local development, while Colab excels in providing cloud-based resources and easy sharing. Choosing between them depends on your specific needs and workflow.
+[Back to AI Essentials Hub](README.md)
+
+## Sources
+
+[^2]: Astral. [Working on projects](https://docs.astral.sh/uv/guides/projects/). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
+
+[^12]: PyTorch Foundation. [Start Locally](https://pytorch.org/get-started/locally/). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
+
+[^49]: Project Jupyter. [Project Jupyter Documentation](https://docs.jupyter.org/en/latest/). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.

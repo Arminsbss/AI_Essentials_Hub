@@ -1,100 +1,50 @@
-# Data Manipulation with Dask Essentials
+# Dask Essentials
 
-## What is Dask?
-Dask is a flexible library for parallel computing in Python. It allows for the handling of larger-than-memory datasets and parallel computing, making it easier to work with big data. Dask integrates seamlessly with the Python ecosystem, particularly with libraries like NumPy, Pandas, and scikit-learn.
+Dask schedules Python computations across partitions, cores, or machines. Use it when a workload benefits from this execution model; distribution adds coordination and data-transfer costs.
 
-## Key Features of Dask
+## Start with the workload
 
-### 1. Parallel Computing
-- Dask can execute operations in parallel across multiple cores or distributed across a cluster, significantly speeding up computation.
+If data fits comfortably on one machine, compare pandas, Polars, or DuckDB first. Dask becomes relevant when partitioned processing, larger-than-memory data, or a cluster is necessary. Partitioning does not guarantee that every operation is memory-safe: joins, shuffles, and collecting a result can still exceed memory.
 
-### 2. Out-of-Core Computation
-- Dask enables manipulation of datasets that are larger than memory by breaking them into smaller chunks and processing them sequentially.
+Dask Array works with chunked numerical arrays; DataFrame works with partitioned tables; Bag supports certain unstructured workflows; delayed tasks represent custom computations. Inspect task count, partition sizes, and skew before scaling workers.
 
-### 3. Familiar API
-- Dask provides a familiar interface that mimics NumPy and Pandas, making it easy for users familiar with these libraries to transition to Dask.
+## Choose a scheduler
 
-### 4. Scalability
-- Dask can scale from a single machine to a distributed cluster, allowing users to manage workloads of varying sizes.
+The original guide's “threads are best for CPU-bound tasks” was too broad. In a conventional GIL-enabled Python runtime, threads help numerical operations that release the GIL; pure Python object processing may benefit from processes. Distributed scheduling can run locally or across machines and provides operational visibility. Benchmark your runtime and workload.[^8]
 
-## Key Concepts
+| Choice | Try it for | Watch for |
+|---|---|---|
+| Threads | Array operations, native numerical code | GIL-bound Python loops |
+| Processes | Python-heavy tasks that can be serialized efficiently | Serialization and memory copies |
+| Distributed | Coordinated local or cluster execution | Worker failures, network and storage throughput |
 
-### 1. Dask Arrays
-- **Purpose**: Used for large, multi-dimensional arrays that operate like NumPy arrays but can handle larger datasets.
-- **Basic Usage**:
-  ```python
-  import dask.array as da
-  
-  # Create a Dask array
-  x = da.random.random(size=(10000, 10000), chunks=(1000, 1000))
-  ```
+## Small self-contained example
 
-### 2. Dask DataFrames
-- **Purpose**: Designed for working with large tabular datasets, similar to Pandas DataFrames but optimized for larger-than-memory data.
-- **Basic Usage**:
-  ```python
-  import dask.dataframe as dd
-  
-  # Create a Dask DataFrame from a CSV file
-  df = dd.read_csv('large_file.csv')
-  ```
+Requires `dask[array]` and NumPy. The result is a scalar; the full array is not collected into the client.
 
-### 3. Dask Bags
-- **Purpose**: Used for processing semi-structured or unstructured data (like JSON or text files) in a way similar to lists in Python.
-- **Basic Usage**:
-  ```python
-  import dask.bag as db
-  
-  # Create a Dask Bag from a list
-  bag = db.from_sequence(['file1.json', 'file2.json'])
-  ```
+```python
+import dask.array as da
 
-## Common Operations
+values = da.arange(1_000_000, chunks=100_000)
+average = values.mean().compute(scheduler="threads")
+assert average == 499999.5
+print(average)
+```
 
-### 1. Reading Data
-- Dask can read various file formats, including CSV, Parquet, JSON, and more:
-  ```python
-  df = dd.read_csv('data/*.csv')
-  ```
+For real tables, start from partitioned Parquet and select only needed columns. A larger-than-memory source can produce a small aggregate; calling `compute()` on the entire table can undo that advantage.
 
-### 2. DataFrame Operations
-- **Filtering**:
-  ```python
-  filtered_df = df[df['column_name'] > value]
-  ```
+## Operating practices
 
-- **GroupBy**:
-  ```python
-  grouped = df.groupby('column_name').sum()
-  ```
+Make tasks large enough that useful computation dominates scheduling. Avoid millions of tiny tasks, repeated scans, and unnecessary transfers between workers. Use `persist()` only when retaining reusable partitions is worth the memory. Place workers close to the data.
 
-- **Computing Results**:
-  ```python
-  result = grouped.compute()
-  ```
+When launching process-based workers from a standalone Python script, put startup logic behind `if __name__ == "__main__":`, particularly on Windows. Review the scheduler documentation for the exact client setup.[^8]
 
-### 3. Aggregations
-- Dask supports aggregation operations similar to Pandas:
-  ```python
-  mean_value = df['column_name'].mean().compute()
-  ```
+Measure wall time, peak worker memory, spill-to-disk behavior, bytes transferred, and failure recovery. A faster run with one cached dataset may not represent repeated production jobs.
 
-### 4. Writing Data
-- Dask can write out data to various formats:
-  ```python
-  df.to_csv('output/*.csv', index=False)
-  ```
+**Exercise:** Compute the same aggregate with NumPy and Dask at several sizes. Explain the point at which scheduling helps or hurts. See [Extra tools](Extra.md) for Spark and streaming choices.
 
-## Dask Scheduler
-Dask provides several schedulers to optimize performance:
-- **Threaded Scheduler**: Best for CPU-bound tasks.
-- **Multiprocessing Scheduler**: For parallel processing using multiple processes.
-- **Distributed Scheduler**: For scaling to a cluster.
+[Back to AI Essentials Hub](README.md)
 
-## Best Practices
-- **Chunk Size**: Choose an appropriate chunk size for your Dask arrays or DataFrames to optimize performance.
-- **Use `compute()` Wisely**: Call `compute()` only when necessary, as it triggers the execution of the entire Dask computation graph.
-- **Monitor Performance**: Use Dask's built-in dashboard to monitor tasks, memory usage, and performance.
+## Sources
 
-## Conclusion
-Dask is a powerful tool for data manipulation that allows for scalable and efficient processing of large datasets in Python. By leveraging its parallel computing capabilities and familiar API, you can work with big data seamlessly.
+[^8]: Dask developers. [Scheduling](https://docs.dask.org/en/stable/scheduling.html). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.

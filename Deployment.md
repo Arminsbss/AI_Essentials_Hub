@@ -1,130 +1,59 @@
-# Deployment Essentials for Machine Learning Models
+# AI Deployment Essentials
 
-## Overview
-Deployment is a crucial step in the machine learning workflow, allowing models to be made accessible for inference and use in real-world applications. Tools like Docker, Flask, FastAPI, and Kubernetes facilitate the deployment and management of machine learning models.
+Deployment delivers a versioned model or workflow to its intended users. A successful response must be correct enough, timely, authorized, observable, and recoverable.
 
-## Key Tools for Deployment
+## Choose the serving shape
 
-### 1. Docker
+| Pattern | Fits | Typical concern |
+|---|---|---|
+| Batch job | Scheduled scoring, bulk extraction | Partial completion and reproducibility |
+| API service | Interactive prediction or generation | Timeouts, concurrency and overload |
+| Background queue | Long-running work | Idempotency, cancellation and retries |
+| On-device inference | Offline or low-latency tasks | Memory, energy, update delivery |
+| Managed endpoint | Teams outsourcing infrastructure | Quotas, region and provider dependencies |
 
-#### Overview
-- **Docker** is a platform that enables developers to automate the deployment of applications in lightweight, portable containers. Containers package an application with all its dependencies, ensuring consistent execution across different environments.
+For a small model, FastAPI or Flask can expose an application interface. Docker packages the application environment. Kubernetes is an option when workload scale and operational requirements justify a cluster; it is not a prerequisite for learning deployment.
 
-#### Key Features
-- **Containerization**: Encapsulate applications and their dependencies, isolating them from the host system.
-- **Portability**: Run containers on any machine with Docker installed, ensuring that the application behaves the same regardless of the environment.
-- **Version Control**: Manage application versions through Docker images.
+FastAPI's deployment guide covers HTTPS, restarts, replication, and memory. Each worker process may load its own copy of a model, so increasing workers can exhaust RAM or accelerator memory.[^36]
 
-#### Installation
-Follow the instructions on the [Docker website](https://docs.docker.com/get-docker/) for your operating system.
+## Generative-model serving
 
-#### Basic Usage
-```bash
-# Build a Docker image
-docker build -t my_model_image .
+Ollama supports local model experimentation, and also supports cloud models. Selecting a cloud-backed model changes where inference runs.[^26] vLLM provides serving features including continuous batching, prefix caching, and quantization support. Model architecture, hardware, and feature compatibility must still be checked.[^27]
 
-# Run a Docker container
-docker run -p 5000:5000 my_model_image
-```
+Separate application workers from a shared inference service when that architecture improves memory use and scaling. “OpenAI-compatible” describes an interface surface; test tool calling, streaming, structured output, token accounting, and error behavior explicitly.
 
-### 2. Flask / FastAPI
+## Release contract
 
-#### Overview
-- **Flask** and **FastAPI** are lightweight web frameworks for Python that are commonly used to create APIs for deploying machine learning models.
+Record code version, dependencies, model identifier and revision, preprocessing, prompt version, retrieval snapshot, schema, and evaluation set. A release may change without new weights: a prompt edit or indexing change can alter behavior.
 
-#### Flask
-- **Flask** is a micro web framework that allows for easy setup of web applications and APIs.
-  
-  **Key Features**
-  - Simple to use and flexible for building web applications.
-  - Extensive documentation and community support.
+Define input size limits, supported languages, timeouts, failure responses, and fallback behavior. Validate outputs before using them in business logic. Load model artifacts only from trusted, verified sources; serialized Python objects can carry executable behavior.
 
-  **Basic Usage**
-  ```python
-  from flask import Flask, request, jsonify
+## Rollout sequence
 
-  app = Flask(__name__)
+1. Reproduce the approved evaluation in a clean environment.
+2. Test the service interface, including malformed and oversized inputs.
+3. Load-test at realistic concurrency and input/output lengths.
+4. Deploy to staging with production-like configuration.
+5. Release to a limited audience or small traffic share and inspect outcomes.
+6. Expand only if predefined quality and reliability criteria hold.
+7. Keep a tested rollback path for code, model, prompts, and index state.
 
-  @app.route('/predict', methods=['POST'])
-  def predict():
-      data = request.json
-      # Your prediction logic here
-      return jsonify(result)
+These are recommended engineering gates. Their thresholds should reflect the actual application, not universal numbers.
 
-  if __name__ == '__main__':
-      app.run(debug=True)
-  ```
+## Failure handling
 
-#### FastAPI
-- **FastAPI** is designed for building APIs quickly and easily, with built-in support for data validation and automatic generation of OpenAPI documentation.
+Use bounded retries with backoff for transient errors. Make state-changing requests idempotent so a retry does not create duplicate transactions. Distinguish an unavailable service from an uncertain answer. Expose health and readiness checks without disclosing credentials or private input.
 
-  **Key Features**
-  - High performance, based on Starlette and Pydantic.
-  - Asynchronous capabilities for handling multiple requests.
+Collect latency percentiles, queue depth, error rates, memory, resource utilization, cost, and task-quality samples. Inspect drift and changes in user behavior rather than monitoring uptime alone.
 
-  **Basic Usage**
-  ```python
-  from fastapi import FastAPI
+**Exercise:** Simulate a slow response, an unavailable model, and a duplicate request. Document the behavior and prove a previous release can be restored. Continue to [observability](Evaluation_and_Observability.md).
 
-  app = FastAPI()
+[Back to AI Essentials Hub](README.md)
 
-  @app.post('/predict')
-  async def predict(data: dict):
-      # Your prediction logic here
-      return {"result": result}
-  ```
+## Sources
 
-### 3. Kubernetes
+[^26]: Ollama. [Quickstart](https://docs.ollama.com/quickstart). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
 
-#### Overview
-- **Kubernetes** is an open-source container orchestration platform that automates the deployment, scaling, and management of containerized applications.
+[^27]: vLLM contributors. [vLLM documentation](https://docs.vllm.ai/en/latest/). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
 
-#### Key Features
-- **Scaling**: Automatically scale applications up or down based on demand.
-- **Load Balancing**: Distribute network traffic to ensure stability and performance.
-- **Rolling Updates**: Deploy updates to applications with zero downtime.
-
-#### Installation
-Follow the instructions on the [Kubernetes website](https://kubernetes.io/docs/setup/) for your operating system.
-
-#### Basic Usage
-1. **Create a Deployment**:
-   ```yaml
-   apiVersion: apps/v1
-   kind: Deployment
-   metadata:
-     name: my-model-deployment
-   spec:
-     replicas: 3
-     selector:
-       matchLabels:
-         app: my-model
-     template:
-       metadata:
-         labels:
-           app: my-model
-       spec:
-         containers:
-         - name: my-model-container
-           image: my_model_image
-           ports:
-           - containerPort: 5000
-   ```
-
-2. **Deploy to Kubernetes**:
-   ```bash
-   kubectl apply -f deployment.yaml
-   ```
-
-## Comparison
-
-| Feature                        | Docker                         | Flask/FastAPI                  | Kubernetes                      |
-|--------------------------------|--------------------------------|--------------------------------|---------------------------------|
-| **Purpose**                    | Containerization               | API development                | Container orchestration         |
-| **Complexity**                 | Low                            | Low                            | High                            |
-| **Scaling**                    | Manual                         | Manual                         | Automatic                       |
-| **Deployment**                 | Image-based                    | Application-based              | Deployment-based                |
-| **Performance**                | Lightweight                    | Lightweight                    | Managed                         |
-
-## Conclusion
-Docker, Flask/FastAPI, and Kubernetes are essential tools for deploying machine learning models. Docker provides a consistent environment through containerization, Flask and FastAPI enable easy API creation for model inference, while Kubernetes offers powerful orchestration for managing applications at scale. The choice of tools depends on the complexity and requirements of your deployment scenario.
+[^36]: FastAPI. [Deployments Concepts](https://fastapi.tiangolo.com/deployment/concepts/). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.

@@ -1,92 +1,81 @@
-# Python for AI Essentials
+# Python Essentials for AI
 
-## What is Python?
-Python is a high-level, interpreted programming language known for its readability and simplicity. It has become the go-to language for AI and machine learning due to its extensive libraries and community support.
+Python connects data preparation, numerical computation, model training, and application services. Learn ordinary software development alongside AI libraries: reliable file handling and clear interfaces matter as much as model selection.
 
-## Key Concepts in AI
+## Core skills
 
-### 1. Artificial Intelligence (AI)
-- **Definition**: The simulation of human intelligence processes by machines, especially computer systems. This includes learning, reasoning, and self-correction.
+Practice lists, dictionaries, sets, functions, comprehensions, exceptions, modules, and classes. Understand array shapes, broadcasting, copies versus views, and the difference between a Python loop and a vectorized operation. Use type hints to describe interfaces; they do not validate runtime input by themselves.
 
-### 2. Machine Learning (ML)
-- **Definition**: A subset of AI that enables systems to learn from data and improve their performance over time without being explicitly programmed.
+For data work, learn NumPy arrays and pandas tables. For applications, learn JSON, HTTP, environment variables, logging, timeouts, and tests. Treat API responses and model output as external input that requires validation.
 
-### 3. Deep Learning (DL)
-- **Definition**: A subfield of ML that uses neural networks with many layers (deep networks) to model complex patterns in large datasets.
+## Create an isolated environment
 
-### 4. Data Preprocessing
-- **Importance**: Cleaning and organizing raw data is crucial for accurate model training. This includes handling missing values, normalization, and feature extraction.
+The standard library includes `venv`; use `python -m pip` so installation targets the intended interpreter.[^1]
 
-## Key Libraries for AI in Python
+Windows PowerShell:
 
-### 1. NumPy
-- **Purpose**: Provides support for large, multi-dimensional arrays and matrices, along with a collection of mathematical functions to operate on these arrays.
-- **Installation**: 
-  ```bash
-  pip install numpy
-  ```
+```powershell
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install numpy pandas scikit-learn
+.\.venv\Scripts\python.exe -m pip check
+```
 
-### 2. Pandas
-- **Purpose**: Offers data structures and functions needed to manipulate structured data, making it easier to clean and analyze datasets.
-- **Installation**: 
-  ```bash
-  pip install pandas
-  ```
+macOS or Linux:
 
-### 3. Matplotlib
-- **Purpose**: A plotting library for creating static, interactive, and animated visualizations in Python.
-- **Installation**: 
-  ```bash
-  pip install matplotlib
-  ```
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install numpy pandas scikit-learn
+.venv/bin/python -m pip check
+```
 
-### 4. Scikit-Learn
-- **Purpose**: A comprehensive library for machine learning, providing tools for classification, regression, clustering, and model evaluation.
-- **Installation**: 
-  ```bash
-  pip install scikit-learn
-  ```
+These commands resolve compatible packages when run; they are not a frozen environment. Record the Python version and dependencies after validating the project.
 
-### 5. TensorFlow
-- **Purpose**: An open-source framework developed by Google for building and training deep learning models. It supports both CPU and GPU computing.
-- **Installation**: 
-  ```bash
-  pip install tensorflow
-  ```
+For a new project, `uv` can manage dependencies and a lockfile. Install it using Astral's installation link in the project guide, then run:[^2]
 
-### 6. Keras
-- **Purpose**: A high-level neural networks API, written in Python and capable of running on top of TensorFlow. It allows for easy and fast prototyping.
-- **Installation**: 
-  ```bash
-  pip install keras
-  ```
+```bash
+uv init ai-project
+cd ai-project
+uv add numpy pandas scikit-learn
+uv add --dev pytest ruff
+uv lock
+uv sync --locked
+```
 
-### 7. PyTorch
-- **Purpose**: An open-source machine learning library developed by Facebook for deep learning applications. It is known for its dynamic computation graph and ease of use.
-- **Installation**: 
-  ```bash
-  pip install torch torchvision
-  ```
+Commit `pyproject.toml`, `uv.lock`, and the selected Python version. Keep `.venv` out of Git. Select a supported Python release that has compatible wheels for the chosen frameworks; the newest interpreter is not automatically the best match for every GPU stack.
 
-### 8. NLTK (Natural Language Toolkit)
-- **Purpose**: A library for working with human language data (text), providing tools for classification, tokenization, stemming, tagging, parsing, and semantic reasoning.
-- **Installation**: 
-  ```bash
-  pip install nltk
-  ```
+## A small data example
 
-### 9. OpenCV
-- **Purpose**: A library for computer vision tasks that allows for image and video processing, making it essential for AI applications involving visual data.
-- **Installation**: 
-  ```bash
-  pip install opencv-python
-  ```
+This example needs NumPy and pandas and uses no downloaded data.
 
-## Best Practices for AI in Python
-- **Understand the Algorithms**: Familiarize yourself with the fundamental algorithms behind AI/ML techniques.
-- **Data Quality Matters**: Focus on obtaining high-quality data for training models.
-- **Model Evaluation**: Use techniques like cross-validation and proper metrics to evaluate model performance.
-- **Keep Learning**: Stay updated with the latest research and advancements in AI.
+```python
+import numpy as np
+import pandas as pd
 
-## Conclusion
-By mastering Python and these key libraries, you will be well-equipped to develop AI applications, conduct research, and solve complex problems in various domains.
+records = pd.DataFrame({
+    "item": ["A", "B", "C"],
+    "quantity": [2, 1, 3],
+    "unit_price": [10.0, 15.0, 8.0],
+})
+records["revenue"] = records["quantity"] * records["unit_price"]
+assert np.isfinite(records["revenue"]).all()
+print(records[["item", "revenue"]])
+print("Total:", records["revenue"].sum())
+```
+
+Expected total: `59.0`. Assertions help expose invalid assumptions; production input validation should also give useful error messages.
+
+## Habits that scale
+
+Keep reusable transformations in modules and exploration in notebooks. Use `pathlib` for paths. Pass configuration explicitly. Store secrets outside source code. Save random seeds, data identifiers, and dependency versions, while recognizing that seeds alone do not ensure identical results across devices.
+
+When a program is slow, measure it before adding parallel workers. Slow network calls, Python loops, vector operations, and GPU kernels have different bottlenecks. See [Dask](dask.md) for scheduler choices.
+
+**Exercise:** Turn the example into a function that checks required columns and rejects negative quantities. Test empty input and a missing price. Then continue to [data preprocessing](Data_Preprocessing.md).
+
+[Back to AI Essentials Hub](README.md)
+
+## Sources
+
+[^1]: Python Software Foundation. [Virtual Environments and Packages](https://docs.python.org/3/tutorial/venv.html). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
+
+[^2]: Astral. [Working on projects](https://docs.astral.sh/uv/guides/projects/). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.

@@ -1,85 +1,71 @@
-# Experiment Tracking and Model Management Essentials
+# Experiment Tracking and Model Management
 
-## Overview
-Experiment tracking and model management are crucial aspects of the machine learning workflow. They help in organizing experiments, comparing results, and maintaining versions of models and datasets. Tools like MLflow and Weights & Biases facilitate these processes.
+Track enough information to explain why one experiment differs from another and to reproduce the selected result. A chart without a dataset revision or split definition is incomplete evidence.
 
-## Key Tools for Experiment Tracking and Model Management
+## What to record
 
-### 1. MLflow
+| Record | Examples |
+|---|---|
+| Identity | Run ID, code commit, author, timestamp |
+| Data | Dataset version, license, split, exclusions |
+| Configuration | Hyperparameters, prompt, seed, model snapshot |
+| Environment | Python/R version, dependency lock, device, precision |
+| Results | Metrics, sample counts, uncertainty, failure examples |
+| Artifacts | Model, processor, schema, evaluation report |
+| Operations | Training duration, latency, memory, billed cost |
 
-#### Overview
-- **MLflow** is an open-source platform that manages the end-to-end machine learning lifecycle, including experimentation, reproducibility, and deployment.
+For generative systems, add retrieved evidence, tool versions, and execution traces where permitted. Redact private content before it reaches a tracking service.
 
-#### Key Features
-- **Experiment Tracking**: Log metrics, parameters, and artifacts for different experiments, allowing for easy comparison.
-- **Model Registry**: Organize and manage models in a central repository with versioning and stage transitions.
-- **Projects**: Package code in a reusable and reproducible way, enabling others to run the same experiments.
-- **Deployment**: Deploy models to various platforms (e.g., REST API, cloud services).
+## Tool choices
 
-#### Installation
-```bash
-pip install mlflow
-```
+MLflow combines ML lifecycle tooling with support for generative AI tracing, evaluation, and prompt-related workflows. Its registry supports model versions, aliases, and tags. Use current registry workflows rather than designing a new process around old stage-transition examples.[^33][^34]
 
-#### Basic Usage
+Weights & Biases provides a registry for versioned model and dataset artifacts. The original hub's “Model Registry: No” entry was incorrect for the current product. Evaluate deployment options, access controls, export, and plan requirements in your environment.[^35]
+
+| Need | Selection criterion |
+|---|---|
+| Training comparison | Parameters, curves, artifacts and dataset lineage |
+| Registry | Versioned artifacts, ownership and controlled promotion |
+| Agent debugging | Linked traces of model, retrieval and tool calls |
+| Sensitive projects | Hosting, redaction and retention controls |
+| Long-term portability | Exportable metrics and artifact references |
+
+## Minimal local experiment record
+
+This standard-library example writes a record into the current directory. Values are fictional and demonstrate a schema, not a benchmark result.
+
 ```python
-import mlflow
+import json
+from pathlib import Path
 
-# Start a new MLflow run
-with mlflow.start_run():
-    # Log parameters
-    mlflow.log_param("alpha", 0.5)
-    
-    # Log metrics
-    mlflow.log_metric("rmse", 0.123)
-    
-    # Log a model (assuming a trained model object)
-    mlflow.sklearn.log_model(model, "model")
+record = {
+    "run_id": "example-001",
+    "status": "illustrative",
+    "dataset_revision": "synthetic-demo-v1",
+    "split": "fixed-example-only",
+    "config": {"model": "baseline", "seed": 42},
+    "metrics": {"example_accuracy": 0.8},
+    "notes": "Replace all example values with measured results.",
+}
+Path("experiment.json").write_text(json.dumps(record, indent=2), encoding="utf-8")
 ```
 
-### 2. Weights & Biases
+Once experiments outgrow this record, adopt a tracking system without changing the principle: evidence must remain tied to the exact configuration that produced it.
 
-#### Overview
-- **Weights & Biases** is a cloud-based platform designed for tracking experiments, visualizing metrics, and collaborating across teams in machine learning projects.
+## Promotion and reproducibility
 
-#### Key Features
-- **Experiment Tracking**: Automatically logs and tracks hyperparameters, metrics, and output files for experiments.
-- **Visualization**: Provides rich visualizations for comparing metrics and model performance over time.
-- **Collaboration**: Enables team collaboration through shared dashboards and reports, fostering communication.
-- **Integration**: Easily integrates with popular machine learning frameworks (TensorFlow, PyTorch, etc.).
+Keep experimentation separate from release promotion. Select a candidate based on an agreed evaluation, record the decision, and promote a specific immutable version. A mutable alias such as `champion` is a pointer; log the concrete version it resolved to for every deployment.
 
-#### Installation
-```bash
-pip install wandb
-```
+Record failures as well as successes. A sequence of selectively reported runs can hide instability. Repeated stochastic generations should retain trial count and variability rather than only the best output.
 
-#### Basic Usage
-```python
-import wandb
+**Exercise:** Reproduce an experiment from another person's record. Add the missing fields and explain whether the remaining variation is caused by data, environment, or model behavior.
 
-# Initialize a new run
-wandb.init(project="my_project")
+[Back to AI Essentials Hub](README.md)
 
-# Log hyperparameters
-wandb.config.alpha = 0.5
+## Sources
 
-# Log metrics
-wandb.log({"rmse": 0.123})
+[^33]: MLflow. [MLflow for Agents and LLMs](https://mlflow.org/docs/latest/genai/). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
 
-# Finish the run
-wandb.finish()
-```
+[^34]: MLflow. [Model Registry Workflows](https://mlflow.org/docs/latest/ml/model-registry/workflow/). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
 
-## Comparison
-
-| Feature                          | MLflow                          | Weights & Biases              |
-|----------------------------------|----------------------------------|-------------------------------|
-| **Ease of Use**                  | Moderate                        | Easy                          |
-| **Experiment Tracking**           | Yes                            | Yes                           |
-| **Visualization**                | Basic                           | Advanced                      |
-| **Collaboration**                | Limited                         | Strong                        |
-| **Model Registry**               | Yes                            | No                            |
-| **Integration with Frameworks**  | Wide support                    | Wide support                  |
-
-## Conclusion
-Both MLflow and Weights & Biases are powerful tools for managing the machine learning lifecycle. MLflow offers a comprehensive approach with features for model registry and project packaging, while Weights & Biases excels in collaboration and visualization capabilities. The choice between them depends on specific project requirements and team workflows.
+[^35]: Weights & Biases. [Registry overview](https://docs.wandb.ai/models/registry). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.

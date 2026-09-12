@@ -1,90 +1,49 @@
-# Extra Tools for AI
+# Data Infrastructure and Supporting Tools
 
-## Overview
-In addition to specialized tools for machine learning and data science, several other technologies play a vital role in handling data and ensuring efficient processing in AI workflows. This document covers Apache Kafka, Apache Spark, and additional essential tools for AI.
+Supporting infrastructure becomes useful when a specific bottleneck demands it. A learner does not need to install a message broker, cluster, orchestration service, and feature store before building a first model.
 
-## Key Tools
+## Event streaming
 
-### 1. Apache Kafka
+Apache Kafka stores and transports streams of events. Consider it when several consumers need durable event access and replay. Define schemas, event identifiers, timestamps, consumer behavior, and retention before connecting it to training or inference.
 
-#### Overview
-- **Apache Kafka** is an open-source distributed event streaming platform designed for high-throughput and fault-tolerant data streams. It is widely used for building real-time data pipelines and streaming applications.
+Kafka 4.0 removed ZooKeeper mode and runs with KRaft. The original two-command ZooKeeper/server startup sequence should not be used as a modern setup recipe. Follow the quickstart for the exact Kafka release and test migrations on a separate cluster.[^40]
 
-#### Key Features
-- **Scalability**: Supports high volumes of data with the ability to scale horizontally.
-- **Fault Tolerance**: Ensures data durability and availability across distributed systems.
-- **Real-Time Processing**: Facilitates real-time analytics and processing of streaming data.
-- **Integration**: Works well with various data processing frameworks, including Apache Spark and Flink.
+A business event can be delivered more than once at application boundaries. Use idempotent processing and understand offset and transaction behavior. Do not equate a broker configuration with end-to-end “exactly once” business effects.
 
-#### Installation
-Follow the instructions on the [Kafka website](https://kafka.apache.org/downloads) for installation.
+## Distributed analytics
 
-#### Basic Usage
-```bash
-# Start Kafka server
-bin/zookeeper-server-start.sh config/zookeeper.properties
-bin/kafka-server-start.sh config/server.properties
+Spark supports distributed data processing, SQL/DataFrames, and Structured Streaming. Check the selected release's Java, Python, and deployment requirements together.[^41] Dask may fit Python-native partitioned computations; Polars and DuckDB may be sufficient for local analytics. Compare operational complexity and real workload measurements before adopting a cluster.
 
-# Create a topic
-bin/kafka-topics.sh --create --topic my-topic --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
-```
+For a learning exercise, prefer explicit schemas over silent type inference on production-like files. Keep transformation logic, source versions, and output validation visible. Joins and shuffles often determine performance more than nominal cluster size.
 
-### 2. Apache Spark
+## Orchestration and storage
 
-#### Overview
-- **Apache Spark** is an open-source unified analytics engine for large-scale data processing. It provides high-level APIs in various programming languages and supports SQL, streaming, machine learning, and graph processing.
+| Need | Architecture to consider | Evidence before adoption |
+|---|---|---|
+| Repeat scheduled steps | Workflow scheduler | Dependencies, retries, backfills, ownership |
+| Share training/inference features | Feature-management system | Freshness and offline/online consistency |
+| Preserve model artifacts | Object storage plus registry | Immutability, access, retention |
+| Search application knowledge | Database/search index | Recall, filters, deletion, cost |
+| Trace a request | Application telemetry | Privacy-safe trace IDs and actionable signals |
 
-#### Key Features
-- **Speed**: In-memory processing capabilities allow for faster data analytics compared to traditional disk-based frameworks.
-- **Versatility**: Supports various data processing tasks, including batch processing, streaming, machine learning, and graph processing.
-- **Ease of Use**: High-level APIs simplify complex data operations, making it accessible for developers.
+These are architecture categories, not endorsements of a particular commercial product. Start with the simplest setup that satisfies the requirements.
 
-#### Installation
-Follow the instructions on the [Spark website](https://spark.apache.org/downloads.html) for installation.
+## Visualization
 
-#### Basic Usage
-```python
-from pyspark.sql import SparkSession
+Use Matplotlib for controlled static plots and Seaborn for statistical exploration. Consider an interactive plotting or BI tool when readers need filtering and drill-down. Always label units, denominators, sample sizes, and uncertainty. For model comparison, show subgroup results and cost alongside the headline score.
 
-# Create Spark session
-spark = SparkSession.builder.appName("MyApp").getOrCreate()
+A polished chart cannot compensate for invalid splits. Store the underlying aggregate data and transformation so the figure can be reproduced.
 
-# Load a DataFrame
-df = spark.read.csv("data.csv", header=True, inferSchema=True)
+## A scale-up rule
 
-# Show DataFrame
-df.show()
-```
+First reduce unnecessary work: select columns, filter early, avoid repeated scans, and use appropriate file formats. Next measure memory and runtime locally. Add parallel or distributed execution only when the measurement shows a need. Finally, test failure recovery and ongoing operating cost.
 
-### 3. TensorFlow
+**Exercise:** Write a decision table comparing a local file-processing job, Dask, and Spark for your workload. Include data size, update frequency, team experience, and recovery requirements. Explain why the smallest viable option is sufficient or insufficient.
 
-#### Overview
-- **TensorFlow** is an open-source machine learning framework developed by Google. It is widely used for building and deploying machine learning and deep learning models.
+[Back to AI Essentials Hub](README.md)
 
-#### Key Features
-- **Flexibility**: Supports various architectures, from simple models to complex neural networks.
-- **Ecosystem**: Includes tools for model training, serving, and deployment (e.g., TensorFlow Serving, TensorFlow Lite).
-- **Community Support**: Extensive documentation and community resources available.
+## Sources
 
-### 4. PyTorch
+[^40]: Apache Software Foundation. [Apache Kafka 4.0.0 Release Announcement](https://kafka.apache.org/blog/2025/03/18/apache-kafka-4.0.0-release-announcement/). 2025-03-18. Reviewed 2026-09-12–2026-09-13.
 
-#### Overview
-- **PyTorch** is an open-source deep learning framework that emphasizes flexibility and ease of use. It is particularly popular among researchers for its dynamic computation graph.
-
-#### Key Features
-- **Dynamic Computation Graph**: Allows for more intuitive model building and debugging.
-- **Strong Community**: Well-supported by a large community, with numerous tutorials and libraries.
-- **Integration**: Works well with other libraries, such as torchvision for computer vision tasks.
-
-### 5. Jupyter Notebooks
-
-#### Overview
-- **Jupyter Notebooks** are interactive documents that allow you to write and execute code, visualize data, and document your thought process in a single environment.
-
-#### Key Features
-- **Interactive Coding**: Supports live code execution, making it ideal for prototyping and data exploration.
-- **Rich Output**: Combine code with rich text, including visualizations and mathematical expressions.
-- **Support for Multiple Languages**: Although primarily used with Python, Jupyter supports many programming languages.
-
-## Conclusion
-Tools like Apache Kafka and Apache Spark are essential for handling real-time data streams and large-scale data processing in AI workflows. Additionally, frameworks like TensorFlow and PyTorch are fundamental for building machine learning models, while Jupyter Notebooks provide an interactive environment for exploration and documentation. Leveraging these tools effectively can enhance the capabilities of AI projects and improve collaboration among team members.
+[^41]: Apache Software Foundation. [Spark Overview](https://spark.apache.org/docs/latest/). Living documentation; no fixed publication date. Reviewed 2026-09-12–2026-09-13.
